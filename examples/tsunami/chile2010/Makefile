@@ -34,10 +34,11 @@ LFLAGS += $(FFLAGS) -lpapi
 
 AMRLIB = $(CLAW)/amrclaw/src/2d
 GEOLIB = $(CLAW)/geoclaw/src/2d/shallow
+HERE = $(CLAW)/geoclaw/examples/tsunami/chile2010
 
 MODULES = \
- amr_module.f90 \
- papi_module.f90 \
+ $(HERE)/amr_module.f90 \
+ $(HERE)/papi_module.f90 \
  $(GEOLIB)/utility_module.f90 \
  $(AMRLIB)/regions_module.f90 \
  $(GEOLIB)/geoclaw_module.f90 \
@@ -54,12 +55,12 @@ MODULES = \
  $(GEOLIB)/friction_module.f90
 
 SOURCES = \
-  geoclaw_riemann_utils.f \
-  rpt2_geoclaw.f \
-  rpn2_geoclaw.f \
-  flux2fw.f \
-  step2.f90 \
-  stepgrid.f \
+  $(HERE)/geoclaw_riemann_utils.f \
+  $(HERE)/rpt2_geoclaw.f \
+  $(HERE)/rpn2_geoclaw.f \
+  $(HERE)/flux2fw.f \
+  $(HERE)/step2.f90 \
+  $(HERE)/stepgrid.f \
   $(GEOLIB)/setprob.f90 \
   $(GEOLIB)/qinit.f90 \
   $(GEOLIB)/topo_update.f90 \
