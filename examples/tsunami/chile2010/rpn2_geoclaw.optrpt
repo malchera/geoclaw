@@ -1,0 +1,107 @@
+
+Begin optimization report for: RPN2
+
+    Report from: Loop nest optimizations [loop]
+
+
+LOOP BEGIN at rpn2_geoclaw.f(93,10)
+<Peeled>
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(93,10)
+   remark #25460: No loop optimizations reported
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(93,10)
+<Remainder>
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(93,10)
+<Remainder>
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(232,10)
+<Distributed chunk1>
+   remark #25426: Loop Distributed (2 way) 
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(232,10)
+<Remainder, Distributed chunk1>
+   remark #25436: completely unrolled by 1  
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(232,10)
+<Distributed chunk2>
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(232,10)
+<Remainder, Distributed chunk2>
+   remark #25436: completely unrolled by 1  
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(240,10)
+   remark #25427: Loop Statements Reordered
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(254,10)
+   remark #25460: No loop optimizations reported
+
+   LOOP BEGIN at rpn2_geoclaw.f(261,11)
+   <Peeled>
+   LOOP END
+
+   LOOP BEGIN at rpn2_geoclaw.f(261,11)
+      remark #25460: No loop optimizations reported
+   LOOP END
+
+   LOOP BEGIN at rpn2_geoclaw.f(261,11)
+   <Remainder>
+   LOOP END
+
+   LOOP BEGIN at rpn2_geoclaw.f(261,11)
+   <Remainder>
+   LOOP END
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(278,10)
+   remark #25460: No loop optimizations reported
+
+   LOOP BEGIN at rpn2_geoclaw.f(278,10)
+      remark #25408: memset generated
+      remark #25436: completely unrolled by 3  
+   LOOP END
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(279,10)
+   remark #25460: No loop optimizations reported
+
+   LOOP BEGIN at rpn2_geoclaw.f(279,10)
+      remark #25408: memset generated
+      remark #25436: completely unrolled by 3  
+   LOOP END
+LOOP END
+
+LOOP BEGIN at rpn2_geoclaw.f(280,10)
+   remark #25460: No loop optimizations reported
+
+   LOOP BEGIN at rpn2_geoclaw.f(281,13)
+      remark #25460: No loop optimizations reported
+
+      LOOP BEGIN at rpn2_geoclaw.f(283,22)
+         remark #25436: completely unrolled by 3  
+      LOOP END
+
+      LOOP BEGIN at rpn2_geoclaw.f(285,19)
+         remark #25436: completely unrolled by 3  
+      LOOP END
+
+      LOOP BEGIN at rpn2_geoclaw.f(287,18)
+         remark #25436: completely unrolled by 3  
+      LOOP END
+
+      LOOP BEGIN at rpn2_geoclaw.f(288,18)
+         remark #25436: completely unrolled by 3  
+      LOOP END
+   LOOP END
+LOOP END
+===========================================================================

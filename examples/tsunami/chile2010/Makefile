@@ -23,7 +23,10 @@ RESTART = False
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
 # Compiler flags can be specified here or set as an environment variable
-FFLAGS ?=
+FFLAGS ?= -p -g
+INCLUDE += $(TACC_PAPI_INC)
+LIB_PATHS += $(TACC_PAPI_LIB)
+LFLAGS += $(FFLAGS) -lpapi
 
 # ---------------------------------
 # List of sources for this program:
@@ -33,8 +36,9 @@ AMRLIB = $(CLAW)/amrclaw/src/2d
 GEOLIB = $(CLAW)/geoclaw/src/2d/shallow
 
 MODULES = \
+ amr_module.f90 \
+ papi_module.f90 \
  $(GEOLIB)/utility_module.f90 \
- $(AMRLIB)/amr_module.f90 \
  $(AMRLIB)/regions_module.f90 \
  $(GEOLIB)/geoclaw_module.f90 \
  $(GEOLIB)/gauges_module.f90 \
@@ -50,20 +54,20 @@ MODULES = \
  $(GEOLIB)/friction_module.f90
 
 SOURCES = \
+  geoclaw_riemann_utils.f \
+  rpt2_geoclaw.f \
+  rpn2_geoclaw.f \
+  flux2fw.f \
+  step2.f90 \
+  stepgrid.f \
   $(GEOLIB)/setprob.f90 \
   $(GEOLIB)/qinit.f90 \
   $(GEOLIB)/topo_update.f90 \
   $(GEOLIB)/cellgridintegrate2.f \
   $(GEOLIB)/topointegral.f \
   $(GEOLIB)/bilinearintegral.f \
-  $(GEOLIB)/stepgrid.f \
-  $(CLAW)/riemann/src/rpn2_geoclaw.f \
-  $(CLAW)/riemann/src/rpt2_geoclaw.f \
-  $(CLAW)/riemann/src/geoclaw_riemann_utils.f \
   $(GEOLIB)/src2.f90 \
   $(GEOLIB)/src1d.f90 \
-  $(GEOLIB)/step2.f90 \
-  $(GEOLIB)/flux2fw.f \
   $(GEOLIB)/qad.f \
   $(GEOLIB)/valout.f \
   $(GEOLIB)/filval.f90 \
