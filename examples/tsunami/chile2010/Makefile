@@ -23,7 +23,7 @@ RESTART = False
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
 # Compiler flags can be specified here or set as an environment variable
-FFLAGS ?= -p -g
+FFLAGS ?=
 INCLUDE += $(TACC_PAPI_INC)
 LIB_PATHS += $(TACC_PAPI_LIB)
 LFLAGS += $(FFLAGS) -lpapi
@@ -55,10 +55,10 @@ MODULES = \
  $(GEOLIB)/friction_module.f90
 
 SOURCES = \
-  $(HERE)/geoclaw_riemann_utils.f \
+  $(HERE)/geoclaw_riemann_utils_aos.f \
+  $(HERE)/rpn2_geoclaw_soa.f \
   $(HERE)/rpt2_geoclaw.f \
-  $(HERE)/rpn2_geoclaw.f \
-  $(HERE)/flux2fw.f \
+  $(HERE)/flux2fw_aos.f \
   $(HERE)/step2.f90 \
   $(HERE)/stepgrid.f \
   $(GEOLIB)/setprob.f90 \

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-NAME="chile"
-COMPILERS=("ifort" "gfortran")
-FLAGS=(" " "-O3" "-O3 -xhost")
-RESOLUTIONS=("60" "120" "360")
+NAME="chile_aos"
+COMPILERS=("ifort")
+FLAGS=(" ")
+RESOLUTIONS=("360")
 # TODO: TRESOLUTIONS=(...)
 
 function usage
@@ -45,7 +45,7 @@ function main
                     done
                     echo
                     echo "Building $binname..."
-                    make new &> /dev/null
+                    make new > /dev/null
                     echo "Done!"
                 else
                     echo "$binname already exists. skipping..."

@@ -26,7 +26,6 @@ c      This version of stepgrid, stepgrid_geo.f allows output on
 c      fixed grids specified in setfixedgrids.data
 c :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-! ADD PAPI
       use papi_module
       use geoclaw_module
       use amr_module
@@ -216,17 +215,10 @@ c:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 c
 c     # take one step on the conservation law:
 c
-#if 0
-      rpn2calls = 0
-!      rpt2calls = 0
-#endif
       call step2(mbig,nvar,maux,
      &           mbc,mx,my,
      &              q,aux,dx,dy,dt,cflgrid,
      &              fm,fp,gm,gp,rpn2,rpt2)
-#if 0
-      write(*,*) "RPN2/RPT2 calls after stepgrid:", rpn2calls, rpt2calls
-#endif
 c
 c            
         mptr_level = node(nestlevel,mptr)
@@ -399,6 +391,7 @@ c            write(*,545) i,j,(q(i,j,ivar),ivar=1,nvar)
          end do
       endif
 c
+c      write (*,*) "Average FLOPs in Riemann iteration:", avg_flpops
       return
       end
 

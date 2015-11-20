@@ -107,10 +107,7 @@ c
       dimension  apdq(meqn, 1-mbc:maxm+mbc)
 c
       logical limit, relimit
-      
-      !integer*8, save :: fluxcalls = 1
-      !write (*,*) "# of calls (FLUX2):", fluxcalls
-      !fluxcalls = fluxcalls + 1
+
       relimit = .false.
 c
       limit = .false.

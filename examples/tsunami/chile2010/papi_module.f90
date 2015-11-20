@@ -10,6 +10,7 @@ module papi_module
 
     integer :: check
     logical :: flopscounted = .false.
+    double precision :: avg_flpops = 0.d0
     save
 !contains
 end module papi_module

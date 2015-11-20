@@ -36,10 +36,8 @@ c
       use geoclaw_module, only: g => grav, drytol => dry_tolerance
       use geoclaw_module, only: earth_radius, deg2rad
       use amr_module, only: mcapa
-      ! ADD: PAPI module
-      use papi_module
+
       implicit none
-      include "f90papi.h"
 
       !input
       integer maxm,meqn,maux,mwaves,mbc,mx,ixy
@@ -66,19 +64,6 @@ c
       double precision tw,dxdc
 
       logical rare1,rare2
-      ! ADD: PAPI stuff
-#if 0
-!============= PAPI VARIABLES ========================================
-      integer*8 :: ncalls = 1
-!============= PAPI VARIABLES ========================================
-      write (*,*) "# of calls (RPN2):", ncalls
-      ncalls = ncalls + 1
-      call PAPIF_flops(rtime, ptime, flpops, mflops, check)
-#endif
-
-#if 0
-      rpn2calls = rpn2calls + 1
-#endif
 
       !loop through Riemann problems at each grid cell
       do i=2-mbc,mx+mbc
@@ -218,15 +203,15 @@ c               bL=hstartest+bR
 
          maxiter = 1
 
-         call riemann_aug_JCP(maxiter,3,3,hL,hR,huL,
-     &        huR,hvL,hvR,bL,bR,uL,uR,vL,vR,phiL,phiR,sE1,sE2,
-     &                                    drytol,g,sw,fw)
+c         call riemann_aug_JCP(maxiter,3,3,hL,hR,huL,
+c     &        huR,hvL,hvR,bL,bR,uL,uR,vL,vR,phiL,phiR,sE1,sE2,
+c     &                                    drytol,g,sw,fw)
 
 c         call riemann_ssqfwave(maxiter,meqn,mwaves,hL,hR,huL,huR,
 c     &     hvL,hvR,bL,bR,uL,uR,vL,vR,phiL,phiR,sE1,sE2,drytol,g,sw,fw)
 
-c          call riemann_fwave(meqn,mwaves,hL,hR,huL,huR,hvL,hvR,
-c     &      bL,bR,uL,uR,vL,vR,phiL,phiR,sE1,sE2,drytol,g,sw,fw)
+          call riemann_fwave(meqn,mwaves,hL,hR,huL,huR,hvL,hvR,
+     &      bL,bR,uL,uR,vL,vR,phiL,phiR,sE1,sE2,drytol,g,sw,fw)
 
 c        !eliminate ghost fluxes for wall
          do mw=1,3
@@ -248,6 +233,7 @@ c        !eliminate ghost fluxes for wall
 
  30      continue
       enddo
+
 
 c==========Capacity for mapping from latitude longitude to physical space====
         if (mcapa.gt.0) then
@@ -297,15 +283,6 @@ c============= compute fluctuations=============================================
 !--152             format("++3 fwave ",8x,3e25.15)
 !--            enddo
 !--        enddo
-
-! ADD: PAPI stuff
-#if 0
-      call PAPIF_flops(rtime, ptime, flpops, mflops, check)
-      if (.not. flopscounted) then
-         write (*,*) "MFLOPS is: ", mflops
-         flopscounted = .true.
-      end if
-#endif
 
       return
       end subroutine
