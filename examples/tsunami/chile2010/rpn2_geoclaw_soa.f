@@ -1,6 +1,7 @@
 c======================================================================
        subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx,
-     &                 ql_aos,qr_aos,auxl,auxr,fwave,s,amdq,apdq)
+     &                 ql_aos,qr_aos,auxl_aos,auxr_aos,fwave,s,amdq_aos,
+     &                 apdq_aos)
 c======================================================================
 c
 c Solves normal Riemann problems for the 2D SHALLOW WATER equations
@@ -42,6 +43,10 @@ c
       !temporary arrays to do AoS->SoA tranform
       double precision  ql_aos(meqn, 1-mbc:maxm+mbc)
       double precision  qr_aos(meqn, 1-mbc:maxm+mbc)
+      double precision  apdq_aos(meqn,1-mbc:maxm+mbc)
+      double precision  amdq_aos(meqn,1-mbc:maxm+mbc)
+      double precision  auxl_aos(maux,1-mbc:maxm+mbc)
+      double precision  auxr_aos(maux,1-mbc:maxm+mbc)
 
       !input
       integer maxm,meqn,maux,mwaves,mbc,mx,ixy
@@ -50,10 +55,10 @@ c
       double precision  s(mwaves, 1-mbc:maxm+mbc)
       double precision  ql(1-mbc:maxm+mbc, meqn)
       double precision  qr(1-mbc:maxm+mbc, meqn)
-      double precision  apdq(meqn,1-mbc:maxm+mbc)
-      double precision  amdq(meqn,1-mbc:maxm+mbc)
-      double precision  auxl(maux,1-mbc:maxm+mbc)
-      double precision  auxr(maux,1-mbc:maxm+mbc)
+      double precision  apdq(1-mbc:maxm+mbc,meqn)
+      double precision  amdq(1-mbc:maxm+mbc,meqn)
+      double precision  auxl(1-mbc:maxm+mbc,maux)
+      double precision  auxr(1-mbc:maxm+mbc,maux)
 
       !local only
       integer m,i,mw,maxiter,mu,nv
@@ -70,9 +75,15 @@ c
       logical rare1,rare2
 !!! AoS to SoA SECTION !!!
       !copy AoS arrays for ql/qr into SoA array
-      do m = 1,meqn
-          ql(:,m) = ql_aos(m,:)
-          qr(:,m) = qr_aos(m,:)
+      do i = 1,meqn
+          ql(:,i) = ql_aos(i,:)
+          qr(:,i) = qr_aos(i,:)
+          apdq(:,i) = apdq_aos(i,:)
+          amdq(:,i) = amdq_aos(i,:)
+      enddo
+      do i = 1,maux
+          auxl(:,i) = auxl_aos(i,:)
+          auxr(:,i) = auxr_aos(i,:)
       enddo
 !!! AoS to SoA SECTION !!!
 
@@ -125,8 +136,8 @@ c        !set normal direction
          hR = ql(i, 1) 
          huL = qr(i-1, mu) 
          huR = ql(i, mu) 
-         bL = auxr(1,i-1)
-         bR = auxl(1,i)
+         bL = auxr(i-1,1)
+         bR = auxl(i,1)
 
          hvL=qr(i-1, nv) 
          hvR=ql(i, nv)
@@ -252,7 +263,7 @@ c==========Capacity for mapping from latitude longitude to physical space====
           if (ixy.eq.1) then
              dxdc=(earth_radius*deg2rad)
           else
-             dxdc=earth_radius*cos(auxl(3,i))*deg2rad
+             dxdc=earth_radius*cos(auxl(i,3))*deg2rad
           endif
 
           do mw=1,mwaves
@@ -272,17 +283,17 @@ c===============================================================================
 
 
 c============= compute fluctuations=============================================
-         amdq(1:3,:) = 0.d0
-         apdq(1:3,:) = 0.d0
+         amdq(:,1:3) = 0.d0
+         apdq(:,1:3) = 0.d0
          do i=2-mbc,mx+mbc
             do  mw=1,mwaves
                if (s(mw,i) < 0.d0) then
-                     amdq(1:3,i) = amdq(1:3,i) + fwave(1:3,mw,i)
+                     amdq(i,1:3) = amdq(i,1:3) + fwave(1:3,mw,i)
                else if (s(mw,i) > 0.d0) then
-                  apdq(1:3,i)  = apdq(1:3,i) + fwave(1:3,mw,i)
+                  apdq(i,1:3)  = apdq(i,1:3) + fwave(1:3,mw,i)
                else
-                 amdq(1:3,i) = amdq(1:3,i) + 0.5d0 * fwave(1:3,mw,i)
-                 apdq(1:3,i) = apdq(1:3,i) + 0.5d0 * fwave(1:3,mw,i)
+                 amdq(i,1:3) = amdq(i,1:3) + 0.5d0 * fwave(1:3,mw,i)
+                 apdq(i,1:3) = apdq(i,1:3) + 0.5d0 * fwave(1:3,mw,i)
                endif
             enddo
          enddo
@@ -301,6 +312,12 @@ c============= compute fluctuations=============================================
       do m = 1,meqn
           ql_aos(m,:) = ql(:,m) 
           qr_aos(m,:) = qr(:,m) 
+          apdq_aos(m,:) = apdq(:,m)
+          amdq_aos(m,:) = amdq(:,m)
+      enddo
+      do m = 1,maux
+          auxl_aos(m,:) = auxl(:,m)
+          auxr_aos(m,:) = auxr(:,m)
       enddo
 !!! SoA to AoS SECTION !!!
       return
