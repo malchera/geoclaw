@@ -8,20 +8,18 @@ echo -n "-qopt-report-file="
 read reportfile
 echo -n "-qopt-report-phase="
 read phase
-echo -n "-qopt-report-filter="
-read filter
 #filter="\"$filter\""
 echo
-
+#-align array64byte 
 read -r -d '' cmd << EOF
-ifort -cpp -c $file
+ifort -cpp -qopenmp-simd -xAVX -fopenmp -c $file
+-S -fsource-asm -masm=intel
 -I$CLAW/amrclaw/src/2d
 -I$CLAW/geoclaw/src/2d/shallow
 -I$TACC_PAPI_INC
 -qopt-report=$n
 -qopt-report-file=$reportfile
 -qopt-report-phase=$phase
--qopt-report-filter=$filter
 EOF
 
 set -o xtrace

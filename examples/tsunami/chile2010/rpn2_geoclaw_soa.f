@@ -51,14 +51,20 @@ c
       !input
       integer maxm,meqn,maux,mwaves,mbc,mx,ixy
 
-      double precision  fwave(meqn, mwaves, 1-mbc:maxm+mbc)
-      double precision  s(mwaves, 1-mbc:maxm+mbc)
+      ! TODO: Change order of s and fwave arrays -> Both are output
+      ! arrays, i.e. we only need to copy them in the end 
+
+      !INPUT
       double precision  ql(1-mbc:maxm+mbc, meqn)
       double precision  qr(1-mbc:maxm+mbc, meqn)
-      double precision  apdq(1-mbc:maxm+mbc,meqn)
-      double precision  amdq(1-mbc:maxm+mbc,meqn)
       double precision  auxl(1-mbc:maxm+mbc,maux)
       double precision  auxr(1-mbc:maxm+mbc,maux)
+      
+      !OUTPUT
+      double precision  fwave(meqn, mwaves, 1-mbc:maxm+mbc)
+      double precision  s(mwaves, 1-mbc:maxm+mbc)
+      double precision  apdq(1-mbc:maxm+mbc,meqn)
+      double precision  amdq(1-mbc:maxm+mbc,meqn)
 
       !local only
       integer m,i,mw,maxiter,mu,nv
@@ -297,27 +303,13 @@ c============= compute fluctuations=============================================
                endif
             enddo
          enddo
-!--       do i=2-mbc,mx+mbc
-!--            do m=1,meqn
-!--                write(51,151) m,i,amdq(m,i),apdq(m,i)
-!--                write(51,152) fwave(m,1,i),fwave(m,2,i),fwave(m,3,i)
-!--151             format("++3 ampdq ",2i4,2e25.15)
-!--152             format("++3 fwave ",8x,3e25.15)
-!--            enddo
-!--        enddo
 
 !!! SoA to AoS SECTION !!!
       !copy SoA arrays for ql/qr back into AoS array for consistency
       !(very unefficient!)
       do m = 1,meqn
-          ql_aos(m,:) = ql(:,m) 
-          qr_aos(m,:) = qr(:,m) 
           apdq_aos(m,:) = apdq(:,m)
           amdq_aos(m,:) = amdq(:,m)
-      enddo
-      do m = 1,maux
-          auxl_aos(m,:) = auxl(:,m)
-          auxr_aos(m,:) = auxr(:,m)
       enddo
 !!! SoA to AoS SECTION !!!
       return

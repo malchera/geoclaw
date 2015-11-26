@@ -23,10 +23,10 @@ RESTART = False
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
 # Compiler flags can be specified here or set as an environment variable
-FFLAGS ?=
+FFLAGS ?= -O2 -g
 INCLUDE += $(TACC_PAPI_INC)
 LIB_PATHS += $(TACC_PAPI_LIB)
-LFLAGS += $(FFLAGS) -lpapi
+LFLAGS += $(FFLAGS) 
 
 # ---------------------------------
 # List of sources for this program:
@@ -56,7 +56,7 @@ MODULES = \
 
 SOURCES = \
   $(HERE)/geoclaw_riemann_utils_aos.f \
-  $(HERE)/rpn2_geoclaw_soa.f \
+  $(HERE)/rpn2_geoclaw.f \
   $(HERE)/rpt2_geoclaw.f \
   $(HERE)/flux2fw_aos.f \
   $(HERE)/step2.f90 \

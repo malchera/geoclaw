@@ -52,6 +52,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
     integer :: maxm,meqn,maux,mwaves,mbc,mx,ixy
 
     !INPUT
+    ! TODO: Question: Is meqn,mwaves,maux ever != 3? Inconsistent in code
+    ! If not, some optimizations possible
     double precision :: ql(1-mbc:maxm+mbc, meqn)
     double precision :: qr(1-mbc:maxm+mbc, meqn)
     double precision :: auxl(1-mbc:maxm+mbc,maux)
@@ -72,27 +74,89 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
     double precision :: sw(3)
 
     double precision :: hR,hL,huR,huL,uR,uL,hvR,hvL,vR,vL,phiR,phiL
+    double precision :: sqrt_ghL, sqrt_ghR ! Temporary variables for sqrt(g*h)
     double precision :: bR,bL,sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
     double precision :: s1m,s2m
     double precision :: hstar,hstartest,hstarHLL,sLtest,sRtest
     double precision :: tw,dxdc
 
     logical :: rare1,rare2
+    ! General:
+    ! TODO: Check all SIMD compiler directives for correctness and reasonability
+    ! !$OMP SIMD -> This one seems to be extremely unefficient due
+    ! to strided accesses and misalignment
 
-    !!! AoS to SoA SECTION !!!
+!!! AoS to SoA SECTION !!! TODO: This should be done in step2 already, when
+    !copying the 2D array to 1D!
     !copy AoS arrays for ql/qr into SoA array
-    do i = 1,meqn
-        ql(:,i) = ql_aos(i,:)
-        qr(:,i) = qr_aos(i,:)
+
+    !dir$ simd
+    do m = 1,meqn
+        do i = 1-mbc,maxm+mbc
+            ql(i,m) = ql_aos(m,i)
+            qr(i,m) = qr_aos(m,i)
+        enddo
     enddo
 
     do i = 1,maux
+        ! TODO how does the colon operator behave? Seems to hamper
+        ! autovectorization.. (spurious flow/anti dependence)
         auxl(:,i) = auxl_aos(i,:)
         auxr(:,i) = auxr_aos(i,:)
     enddo
-    !!! AoS to SoA SECTION !!!
+!!! AoS to SoA SECTION !!!
+
+    !Initialize Riemann problem for grid interface
+    ! TODO: Better approach? Maybe uninitialized arrays have default value?
+
+    !dir$ simd
+    do i=2-mbc,mx+mbc
+        do mw=1,mwaves ! TODO: F-wave dummy element for vectorization?
+            ! Only if mwaves always = 3
+            s(mw,i)=0.d0
+            fwave(1,mw,i)=0.d0
+            fwave(2,mw,i)=0.d0
+            fwave(3,mw,i)=0.d0
+        enddo
+    enddo
+    ! !$omp end simd
+    
+    !set normal direction
+    if (ixy.eq.1) then
+        mu=2
+        nv=3
+    else
+        mu=3
+        nv=2
+    endif
+            
+    !zero (small) negative values if they exist
+    !$omp simd
+    do m=1,meqn
+        ! Shifted by -1 => TODO: Merge loops for ql/qr and peel boundaries
+        do i=1-mbc,mx+mbc-1 
+            if (qr(i, m).lt.0.d0) then
+                qr(i, m)=0.d0
+                !qr(i, 2)=0.d0
+                !qr(i, 3)=0.d0
+            endif ! TODO: else qr(i,m) = qr(i,m) necessary for blending?
+        enddo
+    enddo
+    !$omp end simd
+    !$omp simd
+    do m=1,meqn
+        do i=2-mbc,mx+mbc
+            if (ql(i, m).lt.0.d0) then
+                ql(i, m)=0.d0
+            !    ql(i, 2)=0.d0
+            !    ql(i, 3)=0.d0
+            endif
+        enddo
+    enddo
+    !$omp end simd
 
     !loop through Riemann problems at each grid cell
+    !dir$ forceinline
     do i=2-mbc,mx+mbc
         !-----------------------Initializing-----------------------------------
         !inform of a bad riemann problem from the start
@@ -100,37 +164,9 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
             write(*,*) 'Negative input: hl,hr,i=',qr(i-1, 1),ql(i, 1),i
         endif
 
-        !Initialize Riemann problem for grid interface
-        do mw=1,mwaves
-            s(mw,i)=0.d0
-            fwave(1,mw,i)=0.d0
-            fwave(2,mw,i)=0.d0
-            fwave(3,mw,i)=0.d0
-        enddo
-
-        !        !set normal direction
-        if (ixy.eq.1) then
-            mu=2
-            nv=3
-        else
-            mu=3
-            nv=2
-        endif
-
-        !zero (small) negative values if they exist
-        if (qr(i-1, 1).lt.0.d0) then
-            qr(i-1, 1)=0.d0
-            qr(i-1, 2)=0.d0
-            qr(i-1, 3)=0.d0
-        endif
-
-        if (ql(i, 1).lt.0.d0) then
-            ql(i, 1)=0.d0
-            ql(i, 2)=0.d0
-            ql(i, 3)=0.d0
-        endif
-
         !skip problem if in a completely dry area
+        ! Check: cycle/continue problem for vectorization?
+        ! => YES! See https://software.intel.com/en-us/node/524555
         if (qr(i-1, 1) <= drytol .and. ql(i, 1) <= drytol) then
             cycle
         endif
@@ -173,11 +209,12 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
             phiL = 0.d0
         endif
 
+        ! TODO: wall(1:3) faster/slower?
         wall(1) = 1.d0
         wall(2) = 1.d0
         wall(3) = 1.d0
         if (hR.le.drytol) then
-!            call riemanntype(hL,hL,uL,-uL,hstar,s1m,s2m,rare1,rare2,1,drytol,g)
+            call riemanntype(hL,hL,uL,-uL,hstar,s1m,s2m,rare1,rare2,1,drytol,g)
             hstartest=max(hL,hstar)
 
             if (hstartest+bL.lt.bR) then !right state should become ghost values that mirror left for wall problem
@@ -193,7 +230,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
                 bR=hL+bL
             endif
         elseif (hL.le.drytol) then ! right surface is lower than left topo
-!            call riemanntype(hR,hR,-uR,uR,hstar,s1m,s2m,rare1,rare2,1,drytol,g)
+            call riemanntype(hR,hR,-uR,uR,hstar,s1m,s2m,rare1,rare2,1,drytol,g)
             hstartest=max(hR,hstar)
 
             if (hstartest+bR.lt.bL) then  !left state should become ghost values that mirror right
@@ -211,10 +248,12 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
         endif
 
         !determine wave speeds
-        sL=uL-sqrt(g*hL) ! 1 wave speed of left state
-        sR=uR+sqrt(g*hR) ! 2 wave speed of right state
+        sqrt_ghL = sqrt(g*hL)
+        sqrt_ghR = sqrt(g*hR)
+        sL=uL-sqrt_ghL ! 1 wave speed of left state
+        sR=uR+sqrt_ghR ! 2 wave speed of right state
 
-        uhat=(sqrt(g*hL)*uL + sqrt(g*hR)*uR)/(sqrt(g*hR)+sqrt(g*hL)) ! Roe average
+        uhat=(sqrt_ghL*uL + sqrt_ghR*uR)/(sqrt_ghR+sqrt_ghL) ! Roe average
         chat=sqrt(g*0.5d0*(hR+hL)) ! Roe average
         sRoe1=uhat-chat ! Roe wave speed 1 wave
         sRoe2=uhat+chat ! Roe wave speed 2 wave
@@ -227,17 +266,20 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
 
         maxiter = 1
 
-!        call riemann_fwave(meqn,mwaves,hL,hR,huL,huR,hvL,hvR, &
-!            bL,bR,uL,uR,vL,vR,phiL,phiR,sE1,sE2,drytol,g,sw,fw)
+        call riemann_fwave(meqn,mwaves,hL,hR,huL,huR,hvL,hvR, &
+            bL,bR,uL,uR,vL,vR,phiL,phiR,sE1,sE2,drytol,g,sw,fw)
 
         ! eliminate ghost fluxes for wall
         do mw=1,3
+            ! TODO: What if we use sw(mw) as fw(4,mw), allowing contiguous access
             sw(mw)   = sw(mw)*wall(mw)
             fw(1,mw) = fw(1,mw)*wall(mw) 
             fw(2,mw) = fw(2,mw)*wall(mw)
             fw(3,mw) = fw(3,mw)*wall(mw)
         enddo
 
+        ! TODO: Perhaps split loop with if/else ixy to make it suitable for
+        ! vectorization via blending?
         do mw=1,mwaves
             s(mw,i)        = sw(mw)
             fwave(1,mw,i)  = fw(1,mw)

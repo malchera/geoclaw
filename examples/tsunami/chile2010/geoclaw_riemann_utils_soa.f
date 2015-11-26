@@ -451,7 +451,7 @@ c               hustar=huL+alpha1*sE1
 c-----------------------------------------------------------------------
       subroutine riemann_fwave(meqn,mwaves,hL,hR,huL,huR,hvL,hvR,
      &            bL,bR,uL,uR,vL,vR,phiL,phiR,s1,s2,drytol,g,sw,fw)
-
+!$omp declare simd(riemann_fwave)
       ! solve shallow water equations given single left and right states
       ! solution has two waves.
       ! flux - source is decomposed.
@@ -513,6 +513,7 @@ c-----------------------------------------------------------------------
 c=============================================================================
       subroutine riemanntype(hL,hR,uL,uR,hm,s1m,s2m,rare1,rare2,
      &             maxiter,drytol,g)
+!$omp declare simd(riemanntype)      
 
       !determine the Riemann structure (wave-type in each family)
 
