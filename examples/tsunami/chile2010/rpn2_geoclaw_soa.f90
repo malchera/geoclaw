@@ -54,10 +54,12 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
     !INPUT
     ! TODO: Question: Is meqn,mwaves,maux ever != 3? Inconsistent in code
     ! If not, some optimizations possible
-    double precision :: ql(1-mbc:maxm+mbc, meqn)
-    double precision :: qr(1-mbc:maxm+mbc, meqn)
-    double precision :: auxl(1-mbc:maxm+mbc,maux)
-    double precision :: auxr(1-mbc:maxm+mbc,maux)
+    !double precision :: ql(1-mbc:maxm+mbc, meqn)
+    !double precision :: qr(1-mbc:maxm+mbc, meqn)
+    double precision :: q(1-mbc:maxm+mbc, meqn)
+    double precision :: aux(1-mbc:maxm+mbc,maux)
+    !double precision :: auxl(1-mbc:maxm+mbc,maux)
+    !double precision :: auxr(1-mbc:maxm+mbc,maux)
 
     !OUTPUT
     ! TODO: Change order of s and fwave arrays -> Both are output
@@ -90,26 +92,26 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
     !copying the 2D array to 1D!
     !copy AoS arrays for ql/qr into SoA array
 
-    !dir$ simd
+    ! dir$ simd
     do m = 1,meqn
         do i = 1-mbc,maxm+mbc
-            ql(i,m) = ql_aos(m,i)
-            qr(i,m) = qr_aos(m,i)
+            q(i,m) = ql_aos(m,i)
+            !qr(i,m) = qr_aos(m,i)
         enddo
     enddo
 
     do i = 1,maux
         ! TODO how does the colon operator behave? Seems to hamper
         ! autovectorization.. (spurious flow/anti dependence)
-        auxl(:,i) = auxl_aos(i,:)
-        auxr(:,i) = auxr_aos(i,:)
+        aux(:,i) = auxl_aos(i,:)
+        !auxr(:,i) = auxr_aos(i,:)
     enddo
 !!! AoS to SoA SECTION !!!
 
     !Initialize Riemann problem for grid interface
     ! TODO: Better approach? Maybe uninitialized arrays have default value?
 
-    !dir$ simd
+    ! dir$ simd
     do i=2-mbc,mx+mbc
         do mw=1,mwaves ! TODO: F-wave dummy element for vectorization?
             ! Only if mwaves always = 3
@@ -119,7 +121,6 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
             fwave(3,mw,i)=0.d0
         enddo
     enddo
-    ! !$omp end simd
     
     !set normal direction
     if (ixy.eq.1) then
@@ -131,7 +132,8 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
     endif
             
     !zero (small) negative values if they exist
-    !$omp simd
+#if 0
+    ! $omp simd
     do m=1,meqn
         ! Shifted by -1 => TODO: Merge loops for ql/qr and peel boundaries
         do i=1-mbc,mx+mbc-1 
@@ -142,45 +144,52 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
             endif ! TODO: else qr(i,m) = qr(i,m) necessary for blending?
         enddo
     enddo
-    !$omp end simd
-    !$omp simd
+    ! $omp end simd
+    ! $omp simd
     do m=1,meqn
         do i=2-mbc,mx+mbc
-            if (ql(i, m).lt.0.d0) then
-                ql(i, m)=0.d0
+            if (q(i, m).lt.0.d0) then
+                q(i, m)=0.d0
             !    ql(i, 2)=0.d0
             !    ql(i, 3)=0.d0
             endif
         enddo
     enddo
-    !$omp end simd
+    ! $omp end simd
+#endif
+    do m=1,meqn
+        do i=1-mbc,mx+mbc
+            if (q(i, m).lt.0.d0) then
+                q(i, m)=0.d0
+            endif
+        enddo
+    enddo
 
     !loop through Riemann problems at each grid cell
-    !dir$ forceinline
     do i=2-mbc,mx+mbc
         !-----------------------Initializing-----------------------------------
         !inform of a bad riemann problem from the start
-        if((qr(i-1, 1).lt.0.d0).or.(ql(i, 1) .lt. 0.d0)) then
-            write(*,*) 'Negative input: hl,hr,i=',qr(i-1, 1),ql(i, 1),i
+        if((q(i-1, 1).lt.0.d0).or.(q(i, 1) .lt. 0.d0)) then
+            write(*,*) 'Negative input: hl,hr,i=',q(i-1, 1),q(i, 1),i
         endif
 
         !skip problem if in a completely dry area
         ! Check: cycle/continue problem for vectorization?
         ! => YES! See https://software.intel.com/en-us/node/524555
-        if (qr(i-1, 1) <= drytol .and. ql(i, 1) <= drytol) then
+        if (q(i-1, 1) <= drytol .and. q(i, 1) <= drytol) then
             cycle
         endif
 
         !Riemann problem variables
-        hL = qr(i-1, 1) 
-        hR = ql(i, 1) 
-        huL = qr(i-1, mu) 
-        huR = ql(i, mu) 
-        bL = auxr(i-1,1)
-        bR = auxl(i,1)
+        hL = q(i-1, 1) 
+        hR = q(i, 1) 
+        huL = q(i-1, mu) 
+        huR = q(i, mu) 
+        bL = aux(i-1,1)
+        bR = aux(i,1)
 
-        hvL=qr(i-1, nv) 
-        hvR=ql(i, nv)
+        hvL=q(i-1, nv) 
+        hvR=q(i, nv)
 
         !check for wet/dry boundary
         if (hR.gt.drytol) then
@@ -294,7 +303,7 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
             if (ixy.eq.1) then
                 dxdc=(earth_radius*deg2rad)
             else
-                dxdc=earth_radius*cos(auxl(i,3))*deg2rad
+                dxdc=earth_radius*cos(aux(i,3))*deg2rad
             endif
 
             do mw=1,mwaves

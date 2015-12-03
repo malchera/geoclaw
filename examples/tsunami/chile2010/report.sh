@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 file="rpn2_geoclaw_soa.f90"
-phase="vec,loop"
+phase="vec,loop,align"
 #file=$1                      
 #phase=$2
 

@@ -12,7 +12,8 @@ read phase
 echo
 #-align array64byte 
 read -r -d '' cmd << EOF
-ifort -cpp -qopenmp-simd -xAVX -fopenmp -c $file
+ifort -cpp -O3 -qopenmp-simd -xAVX -fopenmp -c $file
+-align array64byte
 -S -fsource-asm -masm=intel
 -I$CLAW/amrclaw/src/2d
 -I$CLAW/geoclaw/src/2d/shallow
@@ -21,6 +22,6 @@ ifort -cpp -qopenmp-simd -xAVX -fopenmp -c $file
 -qopt-report-file=$reportfile
 -qopt-report-phase=$phase
 EOF
-
+#-qopt-report-filter=
 set -o xtrace
 exec $cmd

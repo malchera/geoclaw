@@ -23,9 +23,10 @@ RESTART = False
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
 # Compiler flags can be specified here or set as an environment variable
-FFLAGS ?= -O2 -g
-INCLUDE += $(TACC_PAPI_INC)
-LIB_PATHS += $(TACC_PAPI_LIB)
+FFLAGS ?= -cpp -O2 -xAVX -align array64byte -qopt-report=3 -qopt-report-phase=vec,loop -qopt-report-routine=rpn2
+#-qopt-report-filter="rpn2_geoclaw_soa.f90" 
+#INCLUDE += $(TACC_PAPI_INC)
+#LIB_PATHS += $(TACC_PAPI_LIB)
 LFLAGS += $(FFLAGS) 
 
 # ---------------------------------
@@ -38,7 +39,6 @@ HERE = $(CLAW)/geoclaw/examples/tsunami/chile2010
 
 MODULES = \
  $(HERE)/amr_module.f90 \
- $(HERE)/papi_module.f90 \
  $(GEOLIB)/utility_module.f90 \
  $(AMRLIB)/regions_module.f90 \
  $(GEOLIB)/geoclaw_module.f90 \
@@ -56,7 +56,7 @@ MODULES = \
 
 SOURCES = \
   $(HERE)/geoclaw_riemann_utils_aos.f \
-  $(HERE)/rpn2_geoclaw.f \
+  $(HERE)/rpn2_geoclaw_soa.f90 \
   $(HERE)/rpt2_geoclaw.f \
   $(HERE)/flux2fw_aos.f \
   $(HERE)/step2.f90 \

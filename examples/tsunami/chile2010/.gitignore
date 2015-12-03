@@ -2,3 +2,4 @@ _tmp_*
 run_*
 CHILE2010_*
 fort.*
+**/*.optrpt

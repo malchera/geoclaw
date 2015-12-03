@@ -3,7 +3,7 @@
      &                ql,qr,aux1,aux2,aux3,asdq,bmasdq,bpasdq)
 ! =====================================================
 ! PAPI ADD
-      use papi_module
+!      use papi_module
       use geoclaw_module, only: g => grav, tol => dry_tolerance
       use geoclaw_module, only: coordinate_system,earth_radius,deg2rad
 
@@ -36,7 +36,7 @@
 
       integer i,m,mw,mu,mv
 ! PAPI ADD
-      rpt2calls = rpt2calls + 1
+!      rpt2calls = rpt2calls + 1
       abs_tol=tol
 
       if (ixy.eq.1) then
