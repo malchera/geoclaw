@@ -1,9 +1,9 @@
 #!/bin/bash
 
-NAME="chile_aos"
+NAME="chile_vanilla"
 COMPILERS=("ifort")
-FLAGS=(" ")
-RESOLUTIONS=("360")
+FLAGS=("")
+RESOLUTIONS=("120" "360" "400") # Check that amr_module.f90:max1d is set properly 
 # TODO: TRESOLUTIONS=(...)
 
 function usage
@@ -20,7 +20,7 @@ function main
         for flags in "${FLAGS[@]}";
         do
             # Replace dashes by underscores and trim whitespaces for file names
-            flagstring=`echo $flags | sed -r "s/ *-/_/g"`
+            flagstring=`echo $flags | sed -r "s/ *-| /_/g"`
             # Binary name containing compiler name and flags
             binname="xgeoclaw_${compiler}${flagstring}"
             # Create temporary directory, copy Makefile to it, sed executable name and flags and build binary
