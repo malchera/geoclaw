@@ -1,1 +1,1 @@
-for q in `ls aos`; do diff -q soa/$q aos/$q; done
+for q in `ls one_q`; do diff -q one_q/$q two_q/$q; done

@@ -23,7 +23,7 @@ RESTART = False
 # Environment variable FC should be set to fortran compiler, e.g. gfortran
 
 # Compiler flags can be specified here or set as an environment variable
-FFLAGS ?= -cpp -O2 -xAVX -align array64byte -qopt-report=3 -qopt-report-phase=vec,loop -qopt-report-routine=rpn2
+FFLAGS ?= -cpp -O2 -ipo -xAVX -align array64byte -qopt-report=5 -qopt-report-phase=vec,loop -qopt-report-routine=rpn2 -qopt-report-file=VECREPORT.optrpt 
 #-qopt-report-filter="rpn2_geoclaw_soa.f90" 
 #INCLUDE += $(TACC_PAPI_INC)
 #LIB_PATHS += $(TACC_PAPI_LIB)
