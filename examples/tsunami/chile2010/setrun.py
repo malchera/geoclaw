@@ -81,8 +81,8 @@ def setrun(claw_pkg='geoclaw'):
 
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = 8
-    clawdata.num_cells[1] = 8
+    clawdata.num_cells[0] = 30
+    clawdata.num_cells[1] = 30
 
     # ---------------
     # Size of system:
@@ -128,8 +128,8 @@ def setrun(claw_pkg='geoclaw'):
 
     if clawdata.output_style==1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = 10
-        clawdata.tfinal = 2.0
+        clawdata.num_output_times = 18
+        clawdata.tfinal = 32400.0
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -280,7 +280,7 @@ def setrun(claw_pkg='geoclaw'):
     amrdata = rundata.amrdata
 
     # max number of refinement levels:
-    amrdata.amr_levels_max = 1
+    amrdata.amr_levels_max = 3
 
     # List of refinement ratios at each level (length at least mxnest-1)
     amrdata.refinement_ratios_x = [2,6]
@@ -323,7 +323,7 @@ def setrun(claw_pkg='geoclaw'):
     amrdata.pprint = False      # proj. of tagged points
     amrdata.rprint = False      # print regridding summary
     amrdata.sprint = False      # space/memory output
-    amrdata.tprint = False      # time step reporting each level
+    amrdata.tprint = True       # time step reporting each level
     amrdata.uprint = False      # update/upbnd reporting
     
     # More AMR parameters can be set -- see the defaults in pyclaw/data.py
