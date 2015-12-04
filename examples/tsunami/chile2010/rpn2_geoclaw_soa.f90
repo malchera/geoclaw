@@ -75,6 +75,9 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
     double precision :: fw(3,3)
     double precision :: sw(3)
 
+    ! TODO: Check whether operations on these variables can be vectorized at all
+    ! if they're not declared as arrays!!! => Maybe work on original q? Shouldn't
+    ! have any consequences as long as q is copied like here...
     double precision :: hR,hL,huR,huL,uR,uL,hvR,hvL,vR,vL,phiR,phiL
     double precision :: sqrt_ghL, sqrt_ghR ! Temporary variables for sqrt(g*h)
     double precision :: bR,bL,sL,sR,sRoe1,sRoe2,sE1,sE2,uhat,chat
@@ -83,6 +86,12 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
     double precision :: tw,dxdc
 
     logical :: rare1,rare2
+    
+    !dir$ assume_aligned fwave:64
+    !dir$ assume_aligned s:64
+    !dir$ assume_aligned apdq:64
+    !dir$ assume_aligned amdq:64
+    
     ! General:
     ! TODO: Check all SIMD compiler directives for correctness and reasonability
     ! !$OMP SIMD -> This one seems to be extremely unefficient due
