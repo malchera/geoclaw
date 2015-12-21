@@ -92,11 +92,6 @@ subroutine rpn2(ixy,maxm,meqn,mwaves,maux,mbc,mx, &
     !dir$ assume_aligned apdq:64
     !dir$ assume_aligned amdq:64
     
-    ! General:
-    ! TODO: Check all SIMD compiler directives for correctness and reasonability
-    ! !$OMP SIMD -> This one seems to be extremely unefficient due
-    ! to strided accesses and misalignment
-
 !!! AoS to SoA SECTION !!! TODO: This should be done in step2 already, when
     !copying the 2D array to 1D!
     !copy AoS arrays for ql/qr into SoA array
